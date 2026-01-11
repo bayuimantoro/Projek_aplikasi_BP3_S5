@@ -46,12 +46,20 @@ class RegisterActivity : AppCompatActivity() {
             val confirmPassword = etConfirmPassword.text.toString().trim()
 
             if (validateInput(username, email, password, confirmPassword)) {
-                // Registration successful - navigate to MainActivity with username
-                Toast.makeText(this, "Registrasi berhasil!", Toast.LENGTH_SHORT).show()
+                // Save user credentials to SharedPreferences with username-specific keys
+                val sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+                val editor = sharedPreferences.edit()
                 
-                val intent = Intent(this, MainActivity::class.java)
-                intent.putExtra("USERNAME", username)
-                intent.putExtra("EMAIL", email)
+                // Store credentials per-username to support multiple accounts
+                editor.putString("user_${username}_password", password)
+                editor.putString("user_${username}_email", email)
+                editor.apply()
+                
+                // Registration successful - navigate to LoginActivity (not MainActivity)
+                Toast.makeText(this, "Registrasi berhasil! Silakan login dengan akun Anda.", Toast.LENGTH_LONG).show()
+                
+                val intent = Intent(this, LoginActivity::class.java)
+                intent.putExtra("USERNAME", username) // Pre-fill username in login form
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
                 finish()

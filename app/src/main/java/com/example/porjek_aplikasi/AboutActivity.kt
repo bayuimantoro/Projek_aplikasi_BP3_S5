@@ -35,10 +35,11 @@ class AboutActivity : AppCompatActivity() {
 
     private lateinit var ivAboutPhoto: CircleImageView
     private var tempCameraUri: Uri? = null
+    private var currentUsername: String = "Guest"
 
     companion object {
         private const val PREFS_NAME = "profile_prefs"
-        private const val KEY_PROFILE_IMAGE = "profile_image_base64"
+        private const val KEY_PROFILE_IMAGE_PREFIX = "profile_image_base64_"
     }
 
     // Camera permission launcher
@@ -102,10 +103,15 @@ class AboutActivity : AppCompatActivity() {
         ivAboutPhoto = findViewById(R.id.iv_about_photo)
         val btnEditPhoto = findViewById<ImageButton>(R.id.btn_edit_photo)
 
-        findViewById<TextView>(R.id.tv_about_name).text = "Bayu Imantoro"
-        findViewById<TextView>(R.id.tv_about_email).text = "bayuimantoro5@gmail.com"
-
-        // Load saved profile image
+        // Get username and email from intent
+        currentUsername = intent.getStringExtra("USERNAME") ?: "Guest"
+        val currentEmail = intent.getStringExtra("EMAIL") ?: ""
+        
+        // Display username and email from logged in user
+        findViewById<TextView>(R.id.tv_about_name).text = currentUsername
+        findViewById<TextView>(R.id.tv_about_email).text = currentEmail
+        
+        // Load saved profile image for this user
         loadSavedImage()
 
         // Click on photo to preview
@@ -121,17 +127,19 @@ class AboutActivity : AppCompatActivity() {
 
     private fun loadSavedImage() {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val base64Image = prefs.getString(KEY_PROFILE_IMAGE, null)
+        // Use username-specific key for profile image
+        val imageKey = KEY_PROFILE_IMAGE_PREFIX + currentUsername
+        val base64Image = prefs.getString(imageKey, null)
         if (base64Image != null) {
             try {
                 val imageBytes = Base64.decode(base64Image, Base64.DEFAULT)
                 val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                 ivAboutPhoto.setImageBitmap(bitmap)
             } catch (e: Exception) {
-                ivAboutPhoto.setImageResource(R.drawable.about_me)
+                ivAboutPhoto.setImageResource(R.drawable.ic_person)
             }
         } else {
-            ivAboutPhoto.setImageResource(R.drawable.about_me)
+            ivAboutPhoto.setImageResource(R.drawable.ic_person)
         }
     }
 
@@ -144,7 +152,9 @@ class AboutActivity : AppCompatActivity() {
             if (bytes != null) {
                 val base64Image = Base64.encodeToString(bytes, Base64.DEFAULT)
                 val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                prefs.edit().putString(KEY_PROFILE_IMAGE, base64Image).apply()
+                // Use username-specific key for profile image
+                val imageKey = KEY_PROFILE_IMAGE_PREFIX + currentUsername
+                prefs.edit().putString(imageKey, base64Image).apply()
             }
         } catch (e: Exception) {
             Toast.makeText(this, "Gagal menyimpan foto", Toast.LENGTH_SHORT).show()

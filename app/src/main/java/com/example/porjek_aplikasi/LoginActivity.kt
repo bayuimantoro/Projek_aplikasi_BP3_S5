@@ -41,12 +41,30 @@ class LoginActivity : AppCompatActivity() {
             val password = etPassword.text.toString().trim()
 
             if (validateInput(username, password)) {
-                // Navigate to MainActivity with username
-                val intent = Intent(this, MainActivity::class.java)
-                intent.putExtra("USERNAME", username)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-                finish()
+                // Check if credentials match registered user (per-username storage)
+                val sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+                val storedPassword = sharedPreferences.getString("user_${username}_password", null)
+                
+                if (storedPassword == null) {
+                    // No user with this username registered
+                    Toast.makeText(this, "Akun tidak ditemukan. Silakan daftar terlebih dahulu.", Toast.LENGTH_LONG).show()
+                } else if (password == storedPassword) {
+                    // Credentials match - login successful
+                    // Save login state
+                    sharedPreferences.edit()
+                        .putBoolean("is_logged_in", true)
+                        .putString("logged_in_username", username)
+                        .apply()
+                    
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.putExtra("USERNAME", username)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    finish()
+                } else {
+                    // Wrong password
+                    Toast.makeText(this, "Password salah!", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 

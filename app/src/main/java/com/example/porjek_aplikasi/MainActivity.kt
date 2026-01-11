@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity() {
     private val vehicleList = ArrayList<Vehicle>()
     private var currentFilter: VehicleType? = null
     private var username: String = "Guest"
+    private var email: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +34,10 @@ class MainActivity : AppCompatActivity() {
 
         // Get username from Login/Register
         username = intent.getStringExtra("USERNAME") ?: "Guest"
+        
+        // Get email from SharedPreferences based on logged in username
+        val sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+        email = sharedPreferences.getString("user_${username}_email", "") ?: ""
         
         // Display username in welcome header
         val tvUsernameDisplay = findViewById<TextView>(R.id.tv_username_display)
@@ -98,10 +103,20 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_about -> {
-                startActivity(Intent(this, AboutActivity::class.java))
+                val aboutIntent = Intent(this, AboutActivity::class.java)
+                aboutIntent.putExtra("USERNAME", username)
+                aboutIntent.putExtra("EMAIL", email)
+                startActivity(aboutIntent)
                 true
             }
             R.id.action_logout -> {
+                // Clear login state
+                val sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+                sharedPreferences.edit()
+                    .putBoolean("is_logged_in", false)
+                    .remove("logged_in_username")
+                    .apply()
+                
                 // Go back to login screen
                 val intent = Intent(this, LoginActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

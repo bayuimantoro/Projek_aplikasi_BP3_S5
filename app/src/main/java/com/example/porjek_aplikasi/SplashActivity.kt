@@ -13,7 +13,20 @@ class SplashActivity : AppCompatActivity() {
         setContentView(R.layout.activity_splash)
 
         Handler(Looper.getMainLooper()).postDelayed({
-            startActivity(Intent(this, LoginActivity::class.java))
+            // Check if user is already logged in
+            val sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+            val isLoggedIn = sharedPreferences.getBoolean("is_logged_in", false)
+            val loggedInUsername = sharedPreferences.getString("logged_in_username", null)
+            
+            if (isLoggedIn && loggedInUsername != null) {
+                // User is already logged in, go directly to MainActivity
+                val intent = Intent(this, MainActivity::class.java)
+                intent.putExtra("USERNAME", loggedInUsername)
+                startActivity(intent)
+            } else {
+                // User not logged in, go to LoginActivity
+                startActivity(Intent(this, LoginActivity::class.java))
+            }
             finish()
         }, 2000)
     }
